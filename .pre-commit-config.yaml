@@ -66,11 +66,7 @@ repos:
           - --exclude-lines
           - 'env: \{ MISTRAL_API_K[E]Y: "sk-\.\.\." \},'
           - --exclude-lines
-<<<<<<< HEAD
-          - '"ap[i]Key": "xxxxx",'
-=======
           - '"ap[i]Key": "xxxxx"(,)?'
->>>>>>> upstream/main
           - --exclude-lines
           - 'ap[i]Key: "A[I]za\.\.\.",'
   # Shell script linting
