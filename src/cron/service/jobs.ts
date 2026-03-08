@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { normalizeAgentId } from "../../routing/session-key.js";
+import { buildDeliveryFromLegacyPayload, hasLegacyDeliveryHints } from "../legacy-delivery.js";
 import { parseAbsoluteTimeMs } from "../parse.js";
 import {
   coerceFiniteScheduleNumber,
@@ -536,6 +537,14 @@ export function createJob(state: CronServiceState, input: CronJobCreate): CronJo
         ? true
         : undefined;
   const enabled = typeof input.enabled === "boolean" ? input.enabled : true;
+  const payloadRecord =
+    input.payload && typeof input.payload === "object"
+      ? (input.payload as Record<string, unknown>)
+      : undefined;
+  const legacyDelivery =
+    payloadRecord && hasLegacyDeliveryHints(payloadRecord)
+      ? (buildDeliveryFromLegacyPayload(payloadRecord) as CronDelivery)
+      : undefined;
   const job: CronJob = {
     id,
     agentId: normalizeOptionalAgentId(input.agentId),
@@ -550,7 +559,12 @@ export function createJob(state: CronServiceState, input: CronJobCreate): CronJo
     sessionTarget: input.sessionTarget,
     wakeMode: input.wakeMode,
     payload: input.payload,
-    delivery: input.delivery,
+    delivery:
+      input.delivery ??
+      legacyDelivery ??
+      (input.sessionTarget === "isolated" && input.payload.kind === "agentTurn"
+        ? { mode: "announce" }
+        : undefined),
     failureAlert: input.failureAlert,
     state: {
       ...input.state,
